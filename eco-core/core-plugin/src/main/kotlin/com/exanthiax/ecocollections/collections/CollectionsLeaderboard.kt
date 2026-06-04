@@ -1,7 +1,6 @@
 package com.exanthiax.ecocollections.collections
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.LoadingCache
+import com.willfp.eco.core.cache.EcoCache
 import com.willfp.eco.core.data.profile
 import com.exanthiax.ecocollections.api.totalCollectionTiers
 import com.exanthiax.ecocollections.plugin
@@ -27,9 +26,9 @@ internal data class LeaderboardSnapshot(
 
 object CollectionsLeaderboard {
 
-    private val perCollectionCaches = ConcurrentHashMap<String, LoadingCache<Boolean, LeaderboardSnapshot>>()
+    private val perCollectionCaches = ConcurrentHashMap<String, EcoCache<Boolean, LeaderboardSnapshot>>()
 
-    private val totalsCache: LoadingCache<Boolean, LeaderboardSnapshot> by lazy {
+    private val totalsCache: EcoCache<Boolean, LeaderboardSnapshot> by lazy {
         buildCache { buildTotalsSnapshot() }
     }
 
@@ -48,14 +47,14 @@ object CollectionsLeaderboard {
         }
     }
 
-    private fun buildCache(loader: () -> LeaderboardSnapshot): LoadingCache<Boolean, LeaderboardSnapshot> {
-        return Caffeine.newBuilder()
+    private fun buildCache(loader: () -> LeaderboardSnapshot): EcoCache<Boolean, LeaderboardSnapshot> {
+        return EcoCache.builder()
             .refreshAfterWrite(getRefreshDuration())
             .executor { command -> plugin.scheduler.runAsync { command.run() } }
             .build { loader() }
     }
 
-    private fun getOrCreateCollectionCache(collection: Collection): LoadingCache<Boolean, LeaderboardSnapshot> {
+    private fun getOrCreateCollectionCache(collection: Collection): EcoCache<Boolean, LeaderboardSnapshot> {
         return perCollectionCaches.computeIfAbsent(collection.id) {
             buildCache { buildCollectionSnapshot(collection) }
         }
