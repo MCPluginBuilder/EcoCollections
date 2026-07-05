@@ -276,4 +276,4 @@ messages:
 
 - **Make a collection:** [How to Make a Collection](how-to-make-a-collection) covers the per-collection config.
 - **Group your collections:** [How to Make a Group](how-to-make-a-group) covers the categories players browse.
-- **Configure effects:** [Configuring an Effect](https://plugins.auxilor.io/effects/configuring-an-effect) covers the shared effects system.
+- **Configure effects:** [Configuring an Effect](https://hub.auxilor.io/wiki/libreforge/configuring-an-effect) covers the shared effects system.

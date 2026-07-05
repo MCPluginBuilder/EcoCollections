@@ -19,7 +19,7 @@ A **collection** rewards a player for repeatedly doing one thing, like mining ac
 
 ## Naming and IDs
 
-The file name (without `.yml`) is the collection's ID. This is the ID you reference in group configs, effects, and placeholders. Item IDs used for `gui.icon` come from the [Item Lookup System](https://plugins.auxilor.io/the-item-lookup-system/items).
+The file name (without `.yml`) is the collection's ID. This is the ID you reference in group configs, effects, and placeholders. Item IDs used for `gui.icon` come from the [Item Lookup System](https://hub.auxilor.io/wiki/eco/the-item-lookup-system-the-item-lookup-system/items).
 
 :::warning ID rules
 IDs may only contain lowercase letters, numbers, and underscores (a-z, 0-9, _). No spaces, capitals, or hyphens, or the collection will not load.
@@ -202,8 +202,8 @@ completion-effects:
 :::danger Effects are their own system
 Effects, conditions, and filters are a shared libreforge system documented separately. To configure them:
 
-- [Configuring an Effect](https://plugins.auxilor.io/effects/configuring-an-effect)
-- [Configuring an Effect Chain](https://plugins.auxilor.io/effects/configuring-a-chain)
+- [Configuring an Effect](https://hub.auxilor.io/wiki/libreforge/configuring-an-effect)
+- [Configuring an Effect Chain](https://hub.auxilor.io/wiki/libreforge/configuring-a-chain)
 :::
 
 ### Reward messages and conditions
@@ -250,5 +250,5 @@ These placeholders work inside this config's lore and messages.
 ## Where to go next
 
 - **Group your collections:** [How to Make a Group](how-to-make-a-group) builds the categories players browse.
-- **Configure effects:** [Configuring an Effect](https://plugins.auxilor.io/effects/configuring-an-effect) covers the shared effects system.
+- **Configure effects:** [Configuring an Effect](https://hub.auxilor.io/wiki/libreforge/configuring-an-effect) covers the shared effects system.
 - **Default examples:** the shipped collection configs live [here](https://github.com/Auxilor/EcoCollections/tree/master/eco-core/core-plugin/src/main/resources/collections).
