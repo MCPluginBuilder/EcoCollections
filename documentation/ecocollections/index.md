@@ -10,7 +10,7 @@ You can build a collection for any item, mob, or resource, each with its own tie
 
 ## What sets EcoCollections apart?
 
-- **Effects on every tier.** Collections run libreforge effects on tier-up and completion, so a tier can grant items, run commands, apply multipliers, or trigger anything the [effects system](https://hub.auxilor.io/wiki/libreforge/configuring-an-effect) supports.
+- **Effects on every tier.** Collections run libreforge effects on tier-up and completion, so a tier can grant items, run commands, apply multipliers, or trigger anything the [effects system](https://plugins.auxilor.io/effects/configuring-an-effect) supports.
 - **Flexible tiers.** Define tiers as an explicit list of requirements, or as a formula for infinite tiers.
 - **Built-in leaderboards.** Rank players by total tiers, with caching and Top X% bucketing out of the box.
 - **Fully custom GUIs.** Every menu, icon, and slot is configurable, and icons accept items from ItemsAdder, Oraxen, Nexo, or any CustomModelData item.

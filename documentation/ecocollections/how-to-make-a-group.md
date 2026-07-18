@@ -19,7 +19,7 @@ A **group** is a category that holds collections together, like Mining or Combat
 
 ## Naming and IDs
 
-The file name (without `.yml`) is the group's ID. This is the ID a collection puts in its `group` field. Item IDs used for `gui.icon` come from the [Item Lookup System](https://hub.auxilor.io/wiki/eco/the-item-lookup-system-the-item-lookup-system/items).
+The file name (without `.yml`) is the group's ID. This is the ID a collection puts in its `group` field. Item IDs used for `gui.icon` come from the [Item Lookup System](https://plugins.auxilor.io/the-item-lookup-system/items).
 
 :::warning ID rules
 IDs may only contain lowercase letters, numbers, and underscores (a-z, 0-9, _). No spaces, capitals, or hyphens, or the group will not load.
@@ -47,7 +47,6 @@ gui:
   position: # Slot in the Collections menu
     row: 2
     column: 6
-    page: 1 # Optional; the page the icon appears on. Defaults to 1
   lore:
     - "&7Slay monsters and hostile mobs."
     - ""
@@ -73,7 +72,6 @@ gui:
   position:
     row: 2
     column: 6
-    page: 1 # Optional; the page the icon appears on. Defaults to 1
   lore:
     - "&7Slay monsters and hostile mobs."
     - ""

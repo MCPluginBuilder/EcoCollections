@@ -28,7 +28,7 @@ gui:
   cache-ttl: 5000 # Milliseconds rendered lore is cached before re-rendering
 
   collections:
-    title: "&8Collections (%page%/%max_page%)" # Supports %page% and %max_page% placeholders
+    title: "&8Collections"
     rows: 6
     mask:
       materials:
@@ -46,27 +46,10 @@ gui:
       location:
         row: 6
         column: 5
-    prev-page:
-      item: arrow name:"&fPrevious Page"
-      item-inactive: gray_stained_glass_pane name:"&7Previous Page"
-      location:
-        row: 6
-        column: 4
-    next-page:
-      item: arrow name:"&fNext Page"
-      item-inactive: gray_stained_glass_pane name:"&7Next Page"
-      location:
-        row: 6
-        column: 6
-    page-change-sound:
-      enabled: true
-      sound: ui.button.click
-      pitch: 1.0
-      volume: 1.0
     custom-slots: []
 
   group:
-    title: "&8%group_name% (%page%/%max_page%)" # Supports %group_name%, %page% and %max_page% placeholders
+    title: "&8%group_name%"
     rows: 6
     mask:
       materials:
@@ -84,27 +67,10 @@ gui:
       location:
         row: 6
         column: 1
-    prev-page:
-      item: arrow name:"&fPrevious Page"
-      item-inactive: gray_stained_glass_pane name:"&7Previous Page"
-      location:
-        row: 6
-        column: 4
-    next-page:
-      item: arrow name:"&fNext Page"
-      item-inactive: gray_stained_glass_pane name:"&7Next Page"
-      location:
-        row: 6
-        column: 6
-    page-change-sound:
-      enabled: true
-      sound: ui.button.click
-      pitch: 1.0
-      volume: 1.0
     custom-slots: []
 
   detail:
-    title: "&8%collection_name% Collection (%page%/%max_page%)" # Supports %collection_name%, %page% and %max_page% placeholders
+    title: "&8%collection_name% Collection"
     rows: 6
     mask:
       materials:
@@ -171,14 +137,14 @@ gui:
           - "%rewards%"
     buttons:
       prev-page:
-        item: arrow name:"&fPrevious Page"
-        item-inactive: gray_stained_glass_pane name:"&7Previous Page"
+        material: "arrow"
+        name: "&fPrevious Page"
         location:
           row: 6
           column: 4
       next-page:
-        item: arrow name:"&fNext Page"
-        item-inactive: gray_stained_glass_pane name:"&7Next Page"
+        material: "arrow"
+        name: "&fNext Page"
         location:
           row: 6
           column: 6
@@ -195,11 +161,6 @@ gui:
         location:
           row: 6
           column: 9
-      page-change-sound:
-        enabled: true
-        sound: ui.button.click
-        pitch: 1.0
-        volume: 1.0
     custom-slots: []
 
   # Locked-collection rendering (used when a collection has unmet unlock-conditions
@@ -276,4 +237,4 @@ messages:
 
 - **Make a collection:** [How to Make a Collection](how-to-make-a-collection) covers the per-collection config.
 - **Group your collections:** [How to Make a Group](how-to-make-a-group) covers the categories players browse.
-- **Configure effects:** [Configuring an Effect](https://hub.auxilor.io/wiki/libreforge/configuring-an-effect) covers the shared effects system.
+- **Configure effects:** [Configuring an Effect](https://plugins.auxilor.io/effects/configuring-an-effect) covers the shared effects system.

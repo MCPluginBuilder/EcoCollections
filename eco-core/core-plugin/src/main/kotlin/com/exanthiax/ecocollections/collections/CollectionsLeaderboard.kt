@@ -1,7 +1,6 @@
 package com.exanthiax.ecocollections.collections
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.LoadingCache
+import com.willfp.eco.core.cache.EcoCache
 import com.willfp.eco.core.data.profile
 import com.exanthiax.ecocollections.api.totalCollectionTiers
 import com.exanthiax.ecocollections.plugin
@@ -27,10 +26,10 @@ internal data class LeaderboardSnapshot(
 
 object CollectionsLeaderboard {
 
-    private val perCollectionCaches = ConcurrentHashMap<String, LoadingCache<Boolean, LeaderboardSnapshot>>()
+    private val perCollectionCaches = ConcurrentHashMap<String, EcoCache<Boolean, LeaderboardSnapshot>>()
 
-    private val totalsCache: LoadingCache<Boolean, LeaderboardSnapshot> by lazy {
-        buildCache { buildTotalsSnapshot() }
+    private val totalsCache: EcoCache<Boolean, LeaderboardSnapshot> by lazy {
+        buildCache()
     }
 
     private fun getRefreshDuration(): Duration {
@@ -48,16 +47,15 @@ object CollectionsLeaderboard {
         }
     }
 
-    private fun buildCache(loader: () -> LeaderboardSnapshot): LoadingCache<Boolean, LeaderboardSnapshot> {
-        return Caffeine.newBuilder()
-            .refreshAfterWrite(getRefreshDuration())
-            .executor { command -> plugin.scheduler.runAsync { command.run() } }
-            .build { loader() }
+    private fun buildCache(): EcoCache<Boolean, LeaderboardSnapshot> {
+        return EcoCache.builder<Boolean, LeaderboardSnapshot>()
+            .expireAfterWrite(getRefreshDuration())
+            .build()
     }
 
-    private fun getOrCreateCollectionCache(collection: Collection): LoadingCache<Boolean, LeaderboardSnapshot> {
+    private fun getOrCreateCollectionCache(collection: Collection): EcoCache<Boolean, LeaderboardSnapshot> {
         return perCollectionCaches.computeIfAbsent(collection.id) {
-            buildCache { buildCollectionSnapshot(collection) }
+            buildCache()
         }
     }
 
@@ -107,7 +105,7 @@ object CollectionsLeaderboard {
 
     fun OfflinePlayer.getCollectionRank(collection: Collection): CollectionRank {
         val snapshot = try {
-            getOrCreateCollectionCache(collection).get(true)
+            getOrCreateCollectionCache(collection).get(true) { buildCollectionSnapshot(collection) }
         } catch (e: Exception) {
             return CollectionRank.Unranked
         }
@@ -135,7 +133,7 @@ object CollectionsLeaderboard {
     fun Collection.getTopPlayers(n: Int): List<LeaderboardEntry> {
         val clampedN = n.coerceIn(1, 10)
         val snapshot = try {
-            getOrCreateCollectionCache(this).get(true)
+            getOrCreateCollectionCache(this).get(true) { buildCollectionSnapshot(this@getTopPlayers) }
         } catch (e: Exception) {
             return emptyList()
         }
@@ -150,7 +148,7 @@ object CollectionsLeaderboard {
 
     fun getTopByTotal(position: Int): LeaderboardEntry? {
         val snapshot = try {
-            totalsCache.get(true)
+            totalsCache.get(true) { buildTotalsSnapshot() }
         } catch (e: Exception) {
             return null
         }
@@ -167,7 +165,7 @@ object CollectionsLeaderboard {
 
     fun getPositionByTotal(uuid: UUID): Int? {
         val snapshot = try {
-            totalsCache.get(true)
+            totalsCache.get(true) { buildTotalsSnapshot() }
         } catch (e: Exception) {
             return null
         }
@@ -177,7 +175,7 @@ object CollectionsLeaderboard {
 
     fun getTop(collection: Collection, position: Int): LeaderboardEntry? {
         val snapshot = try {
-            getOrCreateCollectionCache(collection).get(true)
+            getOrCreateCollectionCache(collection).get(true) { buildCollectionSnapshot(collection) }
         } catch (e: Exception) {
             return null
         }
@@ -194,7 +192,7 @@ object CollectionsLeaderboard {
 
     fun getPosition(collection: Collection, uuid: UUID): Int? {
         val snapshot = try {
-            getOrCreateCollectionCache(collection).get(true)
+            getOrCreateCollectionCache(collection).get(true) { buildCollectionSnapshot(collection) }
         } catch (e: Exception) {
             return null
         }
