@@ -15,6 +15,14 @@ messages:
     chat: "&a&lUNLOCKED! &r&fYou can now progress &e%collection_name%&f."
     title: "&a&lUnlocked"
     subtitle: "&f%collection_name%"
+  count-up:
+    chat: "&aAdded &e%amount% &ato &e%collection_name%&a."
+    title: "&e%collection_name%"
+    subtitle: "&a+%amount%"
+  manual-collect-denied:
+    chat: "&cYou can't collect items right now."
+    title: "&cCollect Denied"
+    subtitle: "&7Failed to meet conditions"
 
 placeholders:
   completed-true: "&aYes"
@@ -46,3 +54,9 @@ groups:
 leaderboard-rank-exact: "&7Your rank: &e#%rank%"
 leaderboard-rank-percent: "&7Your rank: &eTop %percent%%"
 leaderboard-rank-unranked: "&7Your rank: &8Unranked"
+
+lore:
+  manual-collect-one:
+    - "&7Right Click: Collect One"
+  manual-collect-all:
+    - "&7Shift + Right Click: Collect All"

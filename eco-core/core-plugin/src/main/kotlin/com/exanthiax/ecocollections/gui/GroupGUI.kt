@@ -4,6 +4,8 @@ import com.willfp.eco.core.gui.addPage
 import com.willfp.eco.core.gui.addPageChanger
 import com.willfp.eco.core.gui.menu
 import com.willfp.eco.core.gui.onLeftClick
+import com.willfp.eco.core.gui.onRightClick
+import com.willfp.eco.core.gui.onShiftRightClick
 import com.willfp.eco.core.gui.page.PageChanger
 import com.willfp.eco.core.gui.slot
 import com.willfp.eco.core.gui.slot.ConfigSlot
@@ -14,12 +16,16 @@ import com.willfp.eco.core.items.Items
 import com.willfp.eco.core.sound.PlayableSound
 import com.willfp.eco.util.StringUtils
 import com.willfp.eco.util.toNumeral
+import com.willfp.libreforge.EmptyProvidedHolder
+import com.willfp.libreforge.toDispatcher
 import com.exanthiax.ecocollections.api.getCollectionCount
 import com.exanthiax.ecocollections.api.getCollectionTier
+import com.exanthiax.ecocollections.api.giveCollectionCount
 import com.exanthiax.ecocollections.api.isCollectionUnlocked
 import com.exanthiax.ecocollections.collections.Collection
 import com.exanthiax.ecocollections.collections.CollectionRank
 import com.exanthiax.ecocollections.collections.CollectionsLeaderboard.getCollectionRank
+import com.exanthiax.ecocollections.collections.canGainCollectionProgress
 import com.exanthiax.ecocollections.groups.CollectionGroup
 import com.exanthiax.ecocollections.plugin
 import org.bukkit.Material
@@ -28,7 +34,7 @@ import org.bukkit.inventory.ItemStack
 
 object GroupGUI {
 
-    fun open(player: Player, group: CollectionGroup, bypassMode: Boolean = false) {
+    fun open(player: Player, group: CollectionGroup, bypassMode: Boolean = false, page: Int = 1) {
         val titleTemplate = plugin.configYml.getString("gui.group.title")
             .replace("%group_name%", group.name)
         val rows = plugin.configYml.getInt("gui.group.rows")
@@ -40,6 +46,7 @@ object GroupGUI {
         val showLeaderboardRank = plugin.configYml.getBool("leaderboards.show-in-group-gui")
 
         val maxPage = collectionsInGroup.maxOfOrNull { it.guiPage }?.coerceAtLeast(1) ?: 1
+        val targetPage = page.coerceIn(1, maxPage)
 
         val formattedTitle = StringUtils.format(titleTemplate)
         val pageChangeSound = PlayableSound.create(plugin.configYml.getSubsection("gui.group.page-change-sound"))
@@ -48,6 +55,7 @@ object GroupGUI {
             title = formattedTitle
 
             maxPages(maxPage)
+            defaultPage { targetPage }
 
             addPageChanger(plugin.configYml, "gui.group.prev-page", PageChanger.Direction.BACKWARDS, pageChangeSound)
             addPageChanger(plugin.configYml, "gui.group.next-page", PageChanger.Direction.FORWARDS, pageChangeSound)
@@ -84,7 +92,7 @@ object GroupGUI {
                             continue
                         }
 
-                        val builtSlot = buildCollectionSlot(player, collection, showLeaderboardRank)
+                        val builtSlot = buildCollectionSlot(player, group, bypassMode, collection, showLeaderboardRank)
                         if (builtSlot != null) {
                             setSlot(collection.guiRow, collection.guiColumn, builtSlot)
                         }
@@ -101,6 +109,15 @@ object GroupGUI {
                             ConfigSlot(config)
                         )
                     }
+
+                    if (plugin.configYml.getBool("collections.manual-collect-mode.enabled")) {
+                        val unlockedCollectionsInGroup = collectionsInGroup.filter { player.isCollectionUnlocked(it) }
+                        setSlot(
+                            plugin.configYml.getInt("gui.group.collect-all.location.row"),
+                            plugin.configYml.getInt("gui.group.collect-all.location.column"),
+                            buildCollectAllSlot(player, group, bypassMode, unlockedCollectionsInGroup)
+                        )
+                    }
                 }
             }
         }
@@ -108,8 +125,34 @@ object GroupGUI {
         theMenu.open(player)
     }
 
+    private fun buildCollectAllSlot(
+        player: Player,
+        group: CollectionGroup,
+        bypassMode: Boolean,
+        collectionsInGroup: List<Collection>
+    ): Slot {
+        val collectAllMaterial = plugin.configYml.getString("gui.group.collect-all.material")
+        val collectAllName = plugin.configYml.getString("gui.group.collect-all.name")
+
+        val collectAllButtonItem = Items.lookup(collectAllMaterial).item.clone()
+        val meta = collectAllButtonItem.itemMeta
+
+        if (meta != null) {
+            meta.setDisplayName(StringUtils.format(collectAllName))
+            collectAllButtonItem.itemMeta = meta
+        }
+
+        return slot(collectAllButtonItem) {
+            onLeftClick { _, _, _, menu ->
+                manualCollectAllItems(player, group, bypassMode, collectionsInGroup, menu.getPage(player))
+            }
+        }
+    }
+
     private fun buildCollectionSlot(
         player: Player,
+        group: CollectionGroup,
+        bypassMode: Boolean,
         collection: Collection,
         showLeaderboardRank: Boolean
     ): Slot? {
@@ -122,7 +165,7 @@ object GroupGUI {
                 return null
             }
 
-            return buildUnlockedCollectionSlot(player, collection, tier, showLeaderboardRank)
+            return buildUnlockedCollectionSlot(player, group, bypassMode, collection, tier, showLeaderboardRank)
         } else {
             if (collection.hideWhenLocked) {
                 return null
@@ -138,6 +181,8 @@ object GroupGUI {
 
     private fun buildUnlockedCollectionSlot(
         player: Player,
+        group: CollectionGroup,
+        bypassMode: Boolean,
         collection: Collection,
         tier: Int,
         showLeaderboardRank: Boolean
@@ -165,6 +210,11 @@ object GroupGUI {
                 }
             }
 
+            if (plugin.configYml.getBool("collections.manual-collect-mode.enabled")) {
+                for (line in plugin.langYml.getStrings("lore.manual-collect-one")) lore.add(StringUtils.format(line))
+                for (line in plugin.langYml.getStrings("lore.manual-collect-all")) lore.add(StringUtils.format(line))
+            }
+
             if (showLeaderboardRank) {
                 val rankLine = formatRankLore(player, collection)
                 if (rankLine != null) {
@@ -180,7 +230,139 @@ object GroupGUI {
             onLeftClick { _, _, _, _ ->
                 CollectionDetailGUI.open(player, collection)
             }
+
+            if (plugin.configYml.getBool("collections.manual-collect-mode.enabled")) {
+                onRightClick { _, _, _, menu ->
+                    removeItemAndGiveCollectionCount(player, group, bypassMode, collection, false, menu.getPage(player))
+                }
+                onShiftRightClick { _, _, _, menu ->
+                    removeItemAndGiveCollectionCount(player, group, bypassMode, collection, true, menu.getPage(player))
+                }
+            }
         }
+    }
+
+    private fun removeItemAndGiveCollectionCount(
+        player: Player,
+        group: CollectionGroup,
+        bypassMode: Boolean,
+        collection: Collection,
+        removeAll: Boolean,
+        page: Int
+    ) {
+        if (!player.canGainCollectionProgress()) {
+            sendManualCollectDeniedMessage(player)
+            return
+        }
+
+        if (collection.hasConditions && !collection.conditions.areMet(player.toDispatcher(), EmptyProvidedHolder)) {
+            sendManualCollectDeniedMessage(player)
+            return
+        }
+
+        val removed = removeManualCollectItemsFromInventory(player, collection, removeAll)
+        if (removed <= 0) {
+            return
+        }
+
+        player.giveCollectionCount(collection, removed.toDouble())
+        open(player, group, bypassMode, page)
+    }
+
+    private fun manualCollectAllItems(
+        player: Player,
+        group: CollectionGroup,
+        bypassMode: Boolean,
+        collectionsInGroup: List<Collection>,
+        page: Int
+    ) {
+        if (!player.canGainCollectionProgress()) {
+            sendManualCollectDeniedMessage(player)
+            return
+        }
+
+        var collected = false
+        for (collection in collectionsInGroup) {
+            if (collection.hasConditions && !collection.conditions.areMet(player.toDispatcher(), EmptyProvidedHolder)) continue
+
+            val removed = removeManualCollectItemsFromInventory(player, collection, true)
+            if (removed <= 0) continue
+
+            collected = true
+            player.giveCollectionCount(collection, removed.toDouble())
+        }
+
+        if (collected) {
+            open(player, group, bypassMode, page)
+        }
+    }
+
+    private fun sendManualCollectDeniedMessage(player: Player) {
+        if (!plugin.configYml.getBool("messages.manual-collect-denied.enabled")) return
+
+        if (plugin.configYml.getBool("messages.manual-collect-denied.chat")) {
+            val message = plugin.langYml.getString("messages.manual-collect-denied.chat")
+            player.sendMessage(StringUtils.format(message))
+        }
+
+        if (plugin.configYml.getBool("messages.manual-collect-denied.title")) {
+            val title = plugin.langYml.getString("messages.manual-collect-denied.title")
+            val subtitle = plugin.langYml.getString("messages.manual-collect-denied.subtitle")
+            player.sendTitle(StringUtils.format(title), StringUtils.format(subtitle), 10, 40, 10)
+        }
+
+        PlayableSound.create(plugin.configYml.getSubsection("messages.manual-collect-denied.sound"))
+            ?.playTo(player)
+    }
+
+    private fun removeManualCollectItemsFromInventory(
+        player: Player,
+        collection: Collection,
+        removeAll: Boolean
+    ): Int {
+        val preventOverCount = plugin.configYml.getBool("collections.manual-collect-mode.prevent-over-count")
+        val currentCount = player.getCollectionCount(collection)
+        val maxCount = if (preventOverCount) {
+            collection.tierRequirements.lastOrNull() ?: return 0
+        } else {
+            null
+        }
+
+        if (maxCount != null && currentCount >= maxCount) {
+            return 0
+        }
+
+        var removed = 0
+        val inventory = player.inventory
+        val storageSize = inventory.storageContents.size
+
+        for (slot in 0 until storageSize) {
+            if (!removeAll && removed >= 1) {
+                break
+            }
+
+            if (maxCount != null && currentCount + removed >= maxCount) {
+                break
+            }
+
+            val item = inventory.getItem(slot) ?: continue
+            if (item.type.isAir || collection.manualCollectItems.none { item.isSimilar(it.item) }) {
+                continue
+            }
+
+            val remainingCap = if (maxCount != null) (maxCount - currentCount - removed).toInt().coerceAtLeast(0) else Int.MAX_VALUE
+            val take = minOf(item.amount, if (removeAll) remainingCap else 1)
+            item.amount -= take
+            removed += take
+
+            if (item.amount <= 0) {
+                inventory.setItem(slot, null)
+            } else {
+                inventory.setItem(slot, item)
+            }
+        }
+
+        return removed
     }
 
     private fun buildLockedCollectionSlot(
